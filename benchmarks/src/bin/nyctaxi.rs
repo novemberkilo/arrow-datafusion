@@ -22,7 +22,7 @@ use std::path::PathBuf;
 use std::process;
 use std::time::Instant;
 
-use datafusion::arrow::datatypes::{DataType, Field, Schema};
+use datafusion::arrow::datatypes::{DataType, Field, Schema, TimeUnit};
 use datafusion::arrow::util::pretty;
 
 use datafusion::error::Result;
@@ -98,7 +98,7 @@ async fn datafusion_sql_benchmarks(
     debug: bool,
 ) -> Result<()> {
     let mut queries = HashMap::new();
-    queries.insert("fare_amt_by_passenger", "SELECT passenger_count, MIN(fare_amount), MAX(fare_amount), SUM(fare_amount) FROM tripdata GROUP BY passenger_count");
+    queries.insert("fare_amt_by_passenger", "SELECT passenger_count, MIN(pickup_datetime), MIN(fare_amount), MAX(fare_amount), SUM(fare_amount) FROM tripdata GROUP BY passenger_count");
     for (name, sql) in &queries {
         println!("Executing '{}'", name);
         for i in 0..iterations {
@@ -132,8 +132,10 @@ async fn execute_sql(ctx: &mut ExecutionContext, sql: &str, debug: bool) -> Resu
 fn nyctaxi_schema() -> Schema {
     Schema::new(vec![
         Field::new("VendorID", DataType::Utf8, true),
-        Field::new("tpep_pickup_datetime", DataType::Utf8, true),
-        Field::new("tpep_dropoff_datetime", DataType::Utf8, true),
+        Field::new("pickup_datetime", DataType::Timestamp(TimeUnit::Microsecond, None), true),
+        Field::new("dropoff_datetime", DataType::Timestamp(TimeUnit::Microsecond, None), true),
+        // Field::new("tpep_pickup_datetime", DataType::Utf8, true),
+        // Field::new("tpep_dropoff_datetime", DataType::Utf8, true),
         Field::new("passenger_count", DataType::Int32, true),
         Field::new("trip_distance", DataType::Utf8, true),
         Field::new("RatecodeID", DataType::Utf8, true),
